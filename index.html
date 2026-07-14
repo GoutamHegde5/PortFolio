@@ -28,6 +28,7 @@
         <a href="#intro">Arrival</a>
         <a href="#identity">Identity</a>
         <a href="#skills">Skills</a>
+        <a href="#leetcode">LeetCode</a>
         <a href="#work">Projects</a>
         <a href="#process">Journey</a>
         <a href="#contact">Connect</a>
@@ -69,7 +70,7 @@
         <div class="intro-art panel-layer" aria-hidden="true">
           <div class="art-card art-card-tall">
             <span class="art-index">01</span>
-            <p>100+ DSA problems solved across LeetCode and Codeforces.</p>
+            <p>Consistently practicing problem solving, backend design, and real-world project building.</p>
           </div>
           <div class="art-card art-card-wide">
             <span class="art-index">02</span>
@@ -181,6 +182,37 @@
         </div>
       </section>
 
+      <section class="content-panel section-panel leetcode-panel scroll-panel" id="leetcode" data-leetcode-user="Goutam__Hegde">
+        <div class="panel-head">
+          <p class="eyebrow">LeetCode</p>
+          <h3>A visible snapshot of consistent problem-solving practice.</h3>
+        </div>
+        <div class="leetcode-layout">
+          <div class="leetcode-copy">
+            <span class="card-kicker">Coding Activity</span>
+            <h4>LeetCode Practice Grid</h4>
+            <p>Contribution-style activity squares to show ongoing DSA practice, consistency, and interview preparation.</p>
+            <a class="leetcode-link" href="https://leetcode.com/u/Goutam__Hegde/" target="_blank" rel="noopener noreferrer">Open LeetCode Profile</a>
+          </div>
+          <div class="leetcode-card" aria-label="LeetCode activity grid">
+            <div class="leetcode-card-head">
+              <strong>Recent Activity</strong>
+              <span id="leetcode-status">Loading live LeetCode activity...</span>
+            </div>
+            <div class="leetcode-heatmap" id="leetcode-heatmap" aria-hidden="true"></div>
+            <div class="leetcode-legend" aria-hidden="true">
+              <span>Less</span>
+              <i data-level="0"></i>
+              <i data-level="1"></i>
+              <i data-level="2"></i>
+              <i data-level="3"></i>
+              <i data-level="4"></i>
+              <span>More</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="content-panel section-panel work-panel scroll-panel" id="work">
         <div class="panel-head">
           <p class="eyebrow">Projects</p>
@@ -216,22 +248,39 @@
               </figure>
             </div>
           </article>
-          <article class="project-tile">
-            <span class="card-kicker">Social Platform</span>
-            <h4>SocialConnectApp</h4>
-            <p>Developed a full-stack networking platform with real-time user interactions, secure JWT authentication with refresh tokens, and dynamic content feeds using Java, Spring Boot, Spring Security, and Maven.</p>
+          <article class="project-tile mushroom-project">
+            <span class="card-kicker">Storefront Portal</span>
+            <h4>MushroomBuy</h4>
+            <p>Built a premium mushroom storefront with product browsing, wishlist and restock alerts, cart checkout, Razorpay-style payment flow, admin access, and seller controls for adding inventory and updating contact details.</p>
             <div class="project-meta">
-              <span>Java</span>
-              <span>Spring Security</span>
-              <span>JWT</span>
-              <span>Maven</span>
+              <span>Spring Boot</span>
+              <span>MySQL</span>
+              <span>Authentication</span>
+              <span>Payments</span>
             </div>
             <div class="project-code">
-              <p><strong>Code Focus:</strong> JWT login flow, refresh tokens, feed handling, and secure API design.</p>
+              <p><strong>Code Focus:</strong> customer cart flow, admin product management, checkout handling, wishlist alerts, and inventory updates.</p>
               <div class="project-actions">
                 <a href="#">View Code</a>
                 <a href="#">Project Details</a>
               </div>
+            </div>
+            <div class="project-gallery mushroom-gallery">
+              <figure class="project-shot project-shot-wide">
+                <img src="assets/projects/Screenshot%202026-07-13%20144132.png" alt="MushroomBuy storefront showing products and cart drawer">
+              </figure>
+              <figure class="project-shot">
+                <img src="assets/projects/Screenshot%202026-07-13%20143916.png" alt="MushroomBuy portal login and registration screen">
+              </figure>
+              <figure class="project-shot">
+                <img src="assets/projects/Screenshot%202026-07-13%20144022.png" alt="MushroomBuy admin screen for adding mushroom products">
+              </figure>
+              <figure class="project-shot">
+                <img src="assets/projects/Screenshot%202026-07-13%20144658.png" alt="MushroomBuy payment options checkout screen">
+              </figure>
+              <figure class="project-shot">
+                <img src="assets/projects/Screenshot%202026-07-13%20144221.png" alt="MushroomBuy wishlist and saved delivery details screen">
+              </figure>
             </div>
           </article>
         </div>
@@ -288,7 +337,7 @@
       <section class="content-panel section-panel photo-tease-panel scroll-panel" id="photo-tease">
         <div class="panel-head">
           <p class="eyebrow">Bonus</p>
-          <h3>I am parttime photographer want to see some saple took by me ?</h3>
+          <h3>I am parttime photographer want to see some sample took by me ?</h3>
         </div>
         <div class="photo-tease-box">
           <div class="photo-actions" id="photo-actions">
@@ -303,6 +352,7 @@
 
   <div class="gallery-launch-overlay" id="gallery-launch-overlay" aria-hidden="true"></div>
   <script src="script.js"></script>
+
 </body>
 </html>
 

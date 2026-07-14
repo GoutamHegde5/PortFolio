@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Goutam | Photography</title>
   <link rel="stylesheet" href="photography.css">
+  <link rel="stylesheet" href="cursor-shared.css">
+
 </head>
 <body>
   <div class="photo-page-shell">
+
     <header class="photo-hero">
       <a class="back-link" href="index.html?from=photography" id="back-to-portfolio">Back To Portfolio</a>
       <p class="hero-kicker">Part-Time Photography</p>
@@ -211,7 +214,120 @@
     <img class="lightbox-image" id="lightbox-image" src="" alt="">
   </div>
   <script>
+    // Shared cursor effect.
+    // This enables the same cursor aura + trail on the photography page.
+
+    (function () {
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      if (prefersReduced || coarsePointer) return;
+
+      let cursorAura = null;
+      const cursorTrailCount = 14;
+      const cursorState = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+        targetX: window.innerWidth / 2,
+        targetY: window.innerHeight / 2,
+        angle: 0,
+        speed: 0,
+        isVisible: false,
+        isResting: true
+      };
+      let cursorTrails = [];
+      let cursorIdleTimer = null;
+
+      function animate() {
+        const prevX = cursorState.x;
+        const prevY = cursorState.y;
+
+        cursorState.x += (cursorState.targetX - cursorState.x) * 0.22;
+        cursorState.y += (cursorState.targetY - cursorState.y) * 0.22;
+        const vx = cursorState.x - prevX;
+        const vy = cursorState.y - prevY;
+        cursorState.speed = Math.min(Math.hypot(vx, vy), 34);
+
+        if (cursorState.speed > 0.08) {
+          cursorState.angle = Math.atan2(vy, vx);
+        }
+
+        if (cursorAura) {
+          cursorAura.style.opacity = cursorState.isVisible && !cursorState.isResting ? "1" : "0";
+          const auraStretch = 1 + cursorState.speed * 0.012;
+          const auraSquash = Math.max(0.82, 1 - cursorState.speed * 0.006);
+          cursorAura.style.transform = `translate3d(${cursorState.x}px, ${cursorState.y}px, 0) rotate(${cursorState.angle}rad) scale(${auraStretch}, ${auraSquash})`;
+        }
+
+        let followX = cursorState.x;
+        let followY = cursorState.y;
+
+        cursorTrails.forEach((t, idx) => {
+          const pull = Math.max(0.16, 0.34 - idx * 0.011);
+          t.x += (followX - t.x) * pull;
+          t.y += (followY - t.y) * pull;
+
+          const trailStretch = 1 + cursorState.speed * 0.02;
+          const trailSquash = Math.max(0.68, 1 - cursorState.speed * 0.006);
+          const trailScale = 1 - idx * 0.018;
+
+          t.element.style.transform = `translate3d(${t.x}px, ${t.y}px, 0) rotate(${cursorState.angle}rad) scale(${trailStretch * trailScale}, ${trailSquash * trailScale})`;
+          t.element.classList.toggle("is-visible", cursorState.isVisible && !cursorState.isResting);
+          t.element.classList.toggle("is-resting", cursorState.isResting);
+
+          followX = t.x;
+          followY = t.y;
+        });
+
+        window.requestAnimationFrame(animate);
+      }
+
+      function setup() {
+        cursorAura = document.createElement("span");
+        cursorAura.className = "cursor-aura";
+        cursorAura.setAttribute("aria-hidden", "true");
+        document.body.appendChild(cursorAura);
+
+        cursorTrails = Array.from({ length: cursorTrailCount }, (_, index) => {
+          const trail = document.createElement("span");
+          trail.className = "cursor-trail";
+          trail.style.transitionDelay = `${index * 12}ms`;
+          trail.style.setProperty("--snake-size", `${Math.max(8, 30 - index * 1.45)}px`);
+          trail.style.setProperty("--snake-opacity", `${Math.max(0.16, 0.7 - index * 0.035)}`);
+          trail.setAttribute("aria-hidden", "true");
+          document.body.appendChild(trail);
+          return { element: trail, x: cursorState.x, y: cursorState.y };
+        });
+
+        window.requestAnimationFrame(animate);
+      }
+
+      setup();
+
+      window.addEventListener("pointermove", (event) => {
+        cursorState.targetX = event.clientX;
+        cursorState.targetY = event.clientY;
+        cursorState.isVisible = true;
+        cursorState.isResting = false;
+
+        document.body.style.setProperty("--cursor-x", `${event.clientX}px`);
+        document.body.style.setProperty("--cursor-y", `${event.clientY}px`);
+
+        window.clearTimeout(cursorIdleTimer);
+        cursorIdleTimer = window.setTimeout(() => {
+          cursorState.isResting = true;
+        }, 520);
+      });
+
+      window.addEventListener("pointerleave", () => {
+        cursorState.isVisible = false;
+        cursorState.isResting = true;
+        if (cursorAura) cursorAura.style.opacity = "0";
+        cursorTrails.forEach((t) => t.element.classList.remove("is-visible"));
+      });
+    })();
+
     const backLink = document.getElementById('back-to-portfolio');
+
     if (backLink) {
       backLink.addEventListener('click', () => {
         sessionStorage.setItem('portfolioReturnAnimation', 'photography');

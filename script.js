@@ -7,13 +7,154 @@ const photoYesButton = document.getElementById("photo-yes-btn");
 const photoNoButton = document.getElementById("photo-no-btn");
 const photoStatus = document.getElementById("photo-status");
 const galleryLaunchOverlay = document.getElementById("gallery-launch-overlay");
+const leetcodeHeatmap = document.getElementById("leetcode-heatmap");
+const leetcodePanel = document.getElementById("leetcode");
+const leetcodeStatus = document.getElementById("leetcode-status");
 const textPopTargets = document.querySelectorAll(
-  "h1, h2, h3, h4, a, .headline-chip, .intro-notes span, .art-banner, .card-kicker, .eyebrow, .timeline-mark, .identity-name, .rail-label"
+  "h1, h2, h3, h4, a, .headline-chip, .intro-notes span, .art-banner, .card-kicker, .eyebrow, .timeline-mark, .identity-name, .rail-label, .leetcode-card-head strong"
 );
 const revealTargets = document.querySelectorAll(
-  ".panel-head, .identity-strip, .intro-copy, .intro-notes, .info-card, .skill-group, .project-tile, .timeline-row, .contact-grid a, .photo-tease-box"
+  ".panel-head, .identity-strip, .intro-copy, .intro-notes, .info-card, .skill-group, .leetcode-copy, .leetcode-card, .project-tile, .timeline-row, .contact-grid a, .photo-tease-box"
 );
-const liquidCards = document.querySelectorAll(".floating-card, .info-card, .project-tile, .quote-block");
+const liquidCards = document.querySelectorAll(".floating-card, .info-card, .leetcode-copy, .leetcode-card, .project-tile, .quote-block");
+const leetcodeDays = [];
+const cursorTrailCount = 14;
+const cursorState = {
+  x: window.innerWidth / 2,
+  y: window.innerHeight / 2,
+  targetX: window.innerWidth / 2,
+  targetY: window.innerHeight / 2,
+  lastX: window.innerWidth / 2,
+  lastY: window.innerHeight / 2,
+  angle: 0,
+  speed: 0,
+  isVisible: false,
+  isResting: true
+};
+let cursorAura = null;
+let cursorTrails = [];
+let cursorAnimationFrame = null;
+let cursorIdleTimer = null;
+
+function buildLeetcodeHeatmap() {
+  if (!leetcodeHeatmap) {
+    return;
+  }
+
+  leetcodeHeatmap.textContent = "";
+  leetcodeDays.length = 0;
+
+  for (let index = 90; index >= 0; index -= 1) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - index);
+    const dateKey = date.toISOString().slice(0, 10);
+    const square = document.createElement("span");
+    square.dataset.level = "0";
+    square.dataset.date = dateKey;
+    square.title = `${dateKey}: loading`;
+    leetcodeHeatmap.appendChild(square);
+    leetcodeDays.push({ date, dateKey, square });
+  }
+}
+
+function getLeetcodeLevel(count) {
+  if (count <= 0) {
+    return 0;
+  }
+
+  if (count === 1) {
+    return 1;
+  }
+
+  if (count <= 3) {
+    return 2;
+  }
+
+  if (count <= 5) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function normalizeSubmissionCalendar(calendar) {
+  if (!calendar) {
+    return {};
+  }
+
+  if (typeof calendar === "string") {
+    try {
+      return JSON.parse(calendar);
+    } catch (error) {
+      return {};
+    }
+  }
+
+  return calendar;
+}
+
+function applyLeetcodeCalendar(calendar) {
+  const normalizedCalendar = normalizeSubmissionCalendar(calendar);
+  let activeDays = 0;
+  let totalSubmissions = 0;
+
+  leetcodeDays.forEach(({ dateKey, square }) => {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    const utcSeconds = Math.floor(Date.UTC(year, month - 1, day) / 1000);
+    const localSeconds = Math.floor(new Date(`${dateKey}T00:00:00`).getTime() / 1000);
+    const count = Number(normalizedCalendar[utcSeconds] || normalizedCalendar[localSeconds] || 0);
+    const level = getLeetcodeLevel(count);
+
+    if (count > 0) {
+      activeDays += 1;
+      totalSubmissions += count;
+    }
+
+    square.dataset.level = String(level);
+    square.title = `${dateKey}: ${count} submission${count === 1 ? "" : "s"}`;
+  });
+
+  if (leetcodeStatus) {
+    leetcodeStatus.textContent = `${activeDays} active days, ${totalSubmissions} submissions in the last 91 days`;
+  }
+}
+
+async function loadLeetcodeActivity() {
+  if (!leetcodeHeatmap || !leetcodePanel) {
+    return;
+  }
+
+  const username = leetcodePanel.dataset.leetcodeUser || "Goutam__Hegde";
+  const endpoints = [
+    `https://alfa-leetcode-api.onrender.com/${username}/calendar`,
+    `https://leetcode-api-faisalshohag.vercel.app/${username}`
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, { cache: "no-store" });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const calendar = data.submissionCalendar || data.calendar;
+
+      if (calendar) {
+        applyLeetcodeCalendar(calendar);
+        return;
+      }
+    } catch (error) {
+      // Try the next public API; LeetCode does not expose a stable browser API directly.
+    }
+  }
+
+  if (leetcodeStatus) {
+    leetcodeStatus.textContent = "Live LeetCode activity could not load right now";
+  }
+}
 
 function triggerReturnAnimation() {
   const params = new URLSearchParams(window.location.search);
@@ -175,6 +316,100 @@ function setupLiquidCardDrift() {
   });
 }
 
+function setupCursorEffects() {
+  if (window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  cursorAura = document.createElement("span");
+  cursorAura.className = "cursor-aura";
+  cursorAura.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cursorAura);
+
+  cursorTrails = Array.from({ length: cursorTrailCount }, (_, index) => {
+    const trail = document.createElement("span");
+    trail.className = "cursor-trail";
+    trail.style.transitionDelay = `${index * 12}ms`;
+    trail.style.setProperty("--snake-size", `${Math.max(8, 30 - index * 1.45)}px`);
+    trail.style.setProperty("--snake-opacity", `${Math.max(0.16, 0.7 - index * 0.035)}`);
+    trail.setAttribute("aria-hidden", "true");
+    document.body.appendChild(trail);
+    return {
+      element: trail,
+      x: cursorState.x,
+      y: cursorState.y
+    };
+  });
+
+  const interactiveSelector = "a, button, input, textarea, .project-tile, .info-card, .skill-group, .leetcode-card, .project-shot";
+
+  document.addEventListener("pointerover", (event) => {
+    if (event.target.closest(interactiveSelector) && cursorAura) {
+      cursorAura.classList.add("is-active");
+    }
+  });
+
+  document.addEventListener("pointerout", (event) => {
+    if (event.target.closest(interactiveSelector) && cursorAura) {
+      cursorAura.classList.remove("is-active");
+    }
+  });
+
+  document.addEventListener("pointerleave", () => {
+    cursorState.isVisible = false;
+    cursorState.isResting = true;
+
+    if (cursorAura) {
+      cursorAura.style.opacity = "0";
+    }
+
+    cursorTrails.forEach((trail) => trail.element.classList.remove("is-visible"));
+  });
+
+  animateCursorEffects();
+}
+
+function animateCursorEffects() {
+  const previousX = cursorState.x;
+  const previousY = cursorState.y;
+
+  cursorState.x += (cursorState.targetX - cursorState.x) * 0.22;
+  cursorState.y += (cursorState.targetY - cursorState.y) * 0.22;
+  const velocityX = cursorState.x - previousX;
+  const velocityY = cursorState.y - previousY;
+  cursorState.speed = Math.min(Math.hypot(velocityX, velocityY), 34);
+
+  if (cursorState.speed > 0.08) {
+    cursorState.angle = Math.atan2(velocityY, velocityX);
+  }
+
+  if (cursorAura) {
+    cursorAura.style.opacity = cursorState.isVisible && !cursorState.isResting ? "1" : "0";
+    const auraStretch = 1 + cursorState.speed * 0.012;
+    const auraSquash = Math.max(0.82, 1 - cursorState.speed * 0.006);
+    cursorAura.style.transform = `translate3d(${cursorState.x}px, ${cursorState.y}px, 0) rotate(${cursorState.angle}rad) scale(${auraStretch}, ${auraSquash})`;
+  }
+
+  let followX = cursorState.x;
+  let followY = cursorState.y;
+
+  cursorTrails.forEach((trail, index) => {
+    const pull = Math.max(0.16, 0.34 - index * 0.011);
+    trail.x += (followX - trail.x) * pull;
+    trail.y += (followY - trail.y) * pull;
+    const trailStretch = 1 + cursorState.speed * 0.02;
+    const trailSquash = Math.max(0.68, 1 - cursorState.speed * 0.006);
+    const trailScale = 1 - index * 0.018;
+    trail.element.style.transform = `translate3d(${trail.x}px, ${trail.y}px, 0) rotate(${cursorState.angle}rad) scale(${trailStretch * trailScale}, ${trailSquash * trailScale})`;
+    trail.element.classList.toggle("is-visible", cursorState.isVisible && !cursorState.isResting);
+    trail.element.classList.toggle("is-resting", cursorState.isResting);
+    followX = trail.x;
+    followY = trail.y;
+  });
+
+  cursorAnimationFrame = window.requestAnimationFrame(animateCursorEffects);
+}
+
 function moveNoButton() {
   if (!photoActions || !photoNoButton) {
     return;
@@ -255,14 +490,26 @@ function setupPhotoPrompt() {
 window.addEventListener("pointermove", (event) => {
   document.body.style.setProperty("--cursor-x", `${event.clientX}px`);
   document.body.style.setProperty("--cursor-y", `${event.clientY}px`);
+  cursorState.targetX = event.clientX;
+  cursorState.targetY = event.clientY;
+  cursorState.isVisible = true;
+  cursorState.isResting = false;
+
+  window.clearTimeout(cursorIdleTimer);
+  cursorIdleTimer = window.setTimeout(() => {
+    cursorState.isResting = true;
+  }, 520);
 });
 
 window.addEventListener("scroll", updateScene, { passive: true });
 window.addEventListener("resize", updateScene);
 
 enableTextPop();
+buildLeetcodeHeatmap();
+loadLeetcodeActivity();
 triggerReturnAnimation();
 updateScene();
 setupPhotoPrompt();
 setupAirReveal();
 setupLiquidCardDrift();
+setupCursorEffects();
