@@ -354,6 +354,21 @@
       return Math.min(Math.max(value, min), max);
     }
 
+    function protectImages() {
+      document.querySelectorAll('img').forEach((image) => {
+        image.setAttribute('draggable', 'false');
+        image.addEventListener('contextmenu', (event) => event.preventDefault());
+        image.addEventListener('dragstart', (event) => event.preventDefault());
+      });
+
+      document.addEventListener('keydown', (event) => {
+        const key = event.key.toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u')) {
+          event.preventDefault();
+        }
+      });
+    }
+
     function applyImageTransform() {
       if (!lightboxImage) {
         return;
@@ -396,6 +411,8 @@
       img.style.cursor = 'zoom-in';
       img.addEventListener('click', () => openLightbox(img));
     });
+
+    protectImages();
 
     if (lightboxClose) {
       lightboxClose.addEventListener('click', closeLightbox);

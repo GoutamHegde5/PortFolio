@@ -36,6 +36,21 @@ let cursorTrails = [];
 let cursorAnimationFrame = null;
 let cursorIdleTimer = null;
 
+function protectImages() {
+  document.querySelectorAll("img").forEach((image) => {
+    image.setAttribute("draggable", "false");
+    image.addEventListener("contextmenu", (event) => event.preventDefault());
+    image.addEventListener("dragstart", (event) => event.preventDefault());
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const key = event.key.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && (key === "s" || key === "u")) {
+      event.preventDefault();
+    }
+  });
+}
+
 function buildLeetcodeHeatmap() {
   if (!leetcodeHeatmap) {
     return;
@@ -505,6 +520,7 @@ window.addEventListener("scroll", updateScene, { passive: true });
 window.addEventListener("resize", updateScene);
 
 enableTextPop();
+protectImages();
 buildLeetcodeHeatmap();
 loadLeetcodeActivity();
 triggerReturnAnimation();

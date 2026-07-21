@@ -15,6 +15,11 @@
   box-sizing: border-box;
 }
 
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -105,6 +110,24 @@ body {
   animation: riseIn 0.7s ease both;
 }
 
+.photo-card::after {
+  content: "Goutam Hegde";
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 2;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(5, 18, 29, 0.46);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+}
+
 .photo-card.is-landscape {
   grid-column: span 6;
 }
@@ -179,6 +202,24 @@ body {
 .lightbox.is-open {
   opacity: 1;
   pointer-events: auto;
+}
+
+.lightbox::after {
+  content: "Goutam Hegde";
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  z-index: 3;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 999px;
+  background: rgba(5, 18, 29, 0.52);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
 }
 
 .lightbox-image {
